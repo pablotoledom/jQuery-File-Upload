@@ -102,8 +102,8 @@
         var fileReader = new FileReader();
         fileReader.onloadend = function (e) {
           var arr = new Uint8Array(e.target.result).subarray(0, 4);
-          let header = '';
-          let type = '';
+          var header = '';
+          var type = '';
 
           for (var i = 0; i < arr.length; i++) {
             header += arr[i].toString(16);
