@@ -93,55 +93,136 @@
       // widget (via file input selection, drag & drop or add API call).
       // See the basic file upload widget for more information:
       add: function (e, data) {
-        if (e.isDefaultPrevented()) {
-          return false;
-        }
+        // console.log('add: XXXXXXX', e, data);
         var $this = $(this),
           that = $this.data('blueimp-fileupload') || $this.data('fileupload'),
           options = that.options;
-        data.context = that
-          ._renderUpload(data.files)
-          .data('data', data)
-          .addClass('processing');
-        options.filesContainer[options.prependFiles ? 'prepend' : 'append'](
-          data.context
-        );
-        that._forceReflow(data.context);
-        that._transition(data.context);
-        data
-          .process(function () {
-            return $this.fileupload('process', data);
-          })
-          .always(function () {
-            data.context
-              .each(function (index) {
-                $(this)
-                  .find('.size')
-                  .text(that._formatFileSize(data.files[index].size));
-              })
-              .removeClass('processing');
-            that._renderPreviews(data);
-          })
-          .done(function () {
-            data.context.find('.edit,.start').prop('disabled', false);
-            if (
-              that._trigger('added', e, data) !== false &&
-              (options.autoUpload || data.autoUpload) &&
-              data.autoUpload !== false
-            ) {
-              data.submit();
-            }
-          })
-          .fail(function () {
-            if (data.files.error) {
-              data.context.each(function (index) {
-                var error = data.files[index].error;
-                if (error) {
-                  $(this).find('.error').text(error);
-                }
+
+        const blobx = data.files[0];
+        const fileReader = new FileReader();
+        fileReader.onloadend = function (e) {
+          const arr = new Uint8Array(e.target.result).subarray(0, 4);
+          let header = '';
+          let type = '';
+
+          for (var i = 0; i < arr.length; i++) {
+            header += arr[i].toString(16);
+          }
+
+          switch (header) {
+            case '89504e47':
+              type = 'image/png';
+              break;
+            case '47494638':
+              type = 'image/gif';
+              break;
+            case 'ffd8ffe0':
+            case 'ffd8ffe1':
+            case 'ffd8ffe2':
+            case 'ffd8ffe3':
+            case 'ffd8ffe8':
+              type = 'image/jpeg';
+              break;
+            case '00018':
+              type = 'image/heif';
+              break;
+            default:
+              type = 'unknown'; // Or you can use the blob.type as fallback
+              break;
+          }
+
+          // console.log(header, type);
+
+          if (type !== 'unknown') {
+            if (type === 'image/heic' || type === 'image/heif') {
+              const originalName = data.files[0].name;
+
+              heic2any({
+                blob: data.files[0],
+                toType: 'image/jpeg',
+                quality: 0.5, // cuts the quality and size by half
+              }).then((conversionResultBlob) => {
+                // conversionResult is a BLOB
+                // of the JPEG formatted image
+                // with low quality
+                data.files[0] = new File(
+                  [conversionResultBlob],
+                  originalName
+                    .replace('.heic', '.jpg')
+                    .replace('.heif', '.jpg'),
+                  {
+                    type: conversionResultBlob.type,
+                  }
+                );
+                // console.log('Converted to jpeg:', data.files[0]);
+                // data.submit();
+
+                addContinues(data);
               });
+            } else if (
+              type === 'image/jpeg' ||
+              type === 'image/gif' ||
+              type === 'image/png'
+            ) {
+              addContinues(data);
+            } else {
+              console.log('Aborted');
+              data.abort();
             }
-          });
+          }
+        };
+
+        fileReader.readAsArrayBuffer(blobx);
+
+        function addContinues() {
+          if (e.isDefaultPrevented()) {
+            return false;
+          }
+
+          data.context = that
+            ._renderUpload(data.files)
+            .data('data', data)
+            .addClass('processing');
+          options.filesContainer[options.prependFiles ? 'prepend' : 'append'](
+            data.context
+          );
+          that._forceReflow(data.context);
+          that._transition(data.context);
+          data
+            .process(function () {
+              return $this.fileupload('process', data);
+            })
+            .always(function () {
+              data.context
+                .each(function (index) {
+                  $(this)
+                    .find('.size')
+                    .text(that._formatFileSize(data.files[index].size));
+                })
+                .removeClass('processing');
+              that._renderPreviews(data);
+            })
+            .done(function () {
+              data.context.find('.edit,.start').prop('disabled', false);
+              if (
+                that._trigger('added', e, data) !== false &&
+                (options.autoUpload || data.autoUpload) &&
+                data.autoUpload !== false
+              ) {
+                data.submit();
+              }
+            })
+            .fail(function () {
+              if (data.files.error) {
+                data.context.each(function (index) {
+                  var error = data.files[index].error;
+                  if (error) {
+                    $(this).find('.error').text(error);
+                  }
+                });
+              }
+            });
+        }
       },
       // Callback for the start of each file upload request:
       send: function (e, data) {
@@ -338,13 +419,13 @@
         that
           ._transition($(this).find('.fileupload-progress'))
           .done(function () {
-            $(this)
-              .find('.progress')
-              .attr('aria-valuenow', '0')
-              .children()
-              .first()
-              .css('width', '0%');
-            $(this).find('.progress-extended').html('&nbsp;');
+            // $(this)
+            //   .find('.progress')
+            //   .attr('aria-valuenow', '0')
+            //   .children()
+            //   .first()
+            // .css('width', '0%');
+            // $(this).find('.progress-extended').html('&nbsp;');
             deferred.resolve();
           });
       },

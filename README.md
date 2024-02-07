@@ -78,6 +78,8 @@
 - **Compatible with any server-side application platform:**  
   Works with any server-side platform (PHP, Python, Ruby on Rails, Java,
   Node.js, Go etc.) that supports standard HTML form file uploads.
+- **Automatic image conversion in Heif, Heic format.**
+  When adding images, these will be intercepted in the add and converted to JPEG.
 
 ## Security
 
