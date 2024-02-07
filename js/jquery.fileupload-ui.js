@@ -98,10 +98,10 @@
           that = $this.data('blueimp-fileupload') || $this.data('fileupload'),
           options = that.options;
 
-        const blobx = data.files[0];
-        const fileReader = new FileReader();
+        var blobx = data.files[0];
+        var fileReader = new FileReader();
         fileReader.onloadend = function (e) {
-          const arr = new Uint8Array(e.target.result).subarray(0, 4);
+          var arr = new Uint8Array(e.target.result).subarray(0, 4);
           let header = '';
           let type = '';
 
@@ -135,7 +135,7 @@
 
           if (type !== 'unknown') {
             if (type === 'image/heic' || type === 'image/heif') {
-              const originalName = data.files[0].name;
+              var originalName = data.files[0].name;
 
               heic2any({
                 blob: data.files[0],
