@@ -93,7 +93,6 @@
       // widget (via file input selection, drag & drop or add API call).
       // See the basic file upload widget for more information:
       add: function (e, data) {
-        // console.log('add: XXXXXXX', e, data);
         var $this = $(this),
           that = $this.data('blueimp-fileupload') || $this.data('fileupload'),
           options = that.options;
@@ -131,8 +130,6 @@
               break;
           }
 
-          // console.log(header, type);
-
           if (type !== 'unknown') {
             if (type === 'image/heic' || type === 'image/heif') {
               var originalName = data.files[0].name;
@@ -141,7 +138,7 @@
                 blob: data.files[0],
                 toType: 'image/jpeg',
                 quality: 0.5, // cuts the quality and size by half
-              }).then((conversionResultBlob) => {
+              }).then(function (conversionResultBlob) {
                 // conversionResult is a BLOB
                 // of the JPEG formatted image
                 // with low quality
