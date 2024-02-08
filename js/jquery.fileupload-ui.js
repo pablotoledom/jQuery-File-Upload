@@ -101,6 +101,58 @@
 
         var blobx = data.files[0];
         var fileReader = new FileReader();
+
+        /* eslint-disable jsdoc/require-jsdoc */
+        function addContinues() {
+          if (e.isDefaultPrevented()) {
+            return false;
+          }
+
+          data.context = that
+            ._renderUpload(data.files)
+            .data('data', data)
+            .addClass('processing');
+          options.filesContainer[options.prependFiles ? 'prepend' : 'append'](
+            data.context
+          );
+          that._forceReflow(data.context);
+          that._transition(data.context);
+          data
+            .process(function () {
+              return $this.fileupload('process', data);
+            })
+            .always(function () {
+              data.context
+                .each(function (index) {
+                  $(this)
+                    .find('.size')
+                    .text(that._formatFileSize(data.files[index].size));
+                })
+                .removeClass('processing');
+              that._renderPreviews(data);
+            })
+            .done(function () {
+              data.context.find('.edit,.start').prop('disabled', false);
+              if (
+                that._trigger('added', e, data) !== false &&
+                (options.autoUpload || data.autoUpload) &&
+                data.autoUpload !== false
+              ) {
+                data.submit();
+              }
+            })
+            .fail(function () {
+              if (data.files.error) {
+                data.context.each(function (index) {
+                  var error = data.files[index].error;
+                  if (error) {
+                    $(this).find('.error').text(error);
+                  }
+                });
+              }
+            });
+        }
+
         fileReader.onloadend = function (e) {
           /* eslint-disable-next-line no-undef */
           var arr = new Uint8Array(e.target.result).subarray(0, 4);
@@ -131,57 +183,6 @@
             default:
               type = 'unknown'; // Or you can use the blob.type as fallback
               break;
-          }
-
-          /* eslint-disable jsdoc/require-jsdoc */
-          function addContinues() {
-            if (e.isDefaultPrevented()) {
-              return false;
-            }
-
-            data.context = that
-              ._renderUpload(data.files)
-              .data('data', data)
-              .addClass('processing');
-            options.filesContainer[options.prependFiles ? 'prepend' : 'append'](
-              data.context
-            );
-            that._forceReflow(data.context);
-            that._transition(data.context);
-            data
-              .process(function () {
-                return $this.fileupload('process', data);
-              })
-              .always(function () {
-                data.context
-                  .each(function (index) {
-                    $(this)
-                      .find('.size')
-                      .text(that._formatFileSize(data.files[index].size));
-                  })
-                  .removeClass('processing');
-                that._renderPreviews(data);
-              })
-              .done(function () {
-                data.context.find('.edit,.start').prop('disabled', false);
-                if (
-                  that._trigger('added', e, data) !== false &&
-                  (options.autoUpload || data.autoUpload) &&
-                  data.autoUpload !== false
-                ) {
-                  data.submit();
-                }
-              })
-              .fail(function () {
-                if (data.files.error) {
-                  data.context.each(function (index) {
-                    var error = data.files[index].error;
-                    if (error) {
-                      $(this).find('.error').text(error);
-                    }
-                  });
-                }
-              });
           }
 
           if (type !== 'unknown') {
