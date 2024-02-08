@@ -129,6 +129,8 @@ For further information, please refer to the following guides:
 - [jQuery Iframe Transport plugin](https://github.com/blueimp/jQuery-File-Upload/blob/master/js/jquery.iframe-transport.js)
   (included): Required for
   [browsers without XHR file upload support](https://github.com/blueimp/jQuery-File-Upload/wiki/Browser-support).
+- [heic2any plugin](https://github.com/alexcorvi/heic2any) Requiered for HEIC/HEIF Convertion proccess.
+- [Uint8Array polyfill](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) Requiered for HEIC/HEIF conversion proccess in browsers cannot support ES6.
 
 ### Optional requirements
 

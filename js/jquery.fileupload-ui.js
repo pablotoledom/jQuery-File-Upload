@@ -21,7 +21,8 @@
       './jquery.fileupload-image',
       './jquery.fileupload-audio',
       './jquery.fileupload-video',
-      './jquery.fileupload-validate'
+      './jquery.fileupload-validate',
+      './vendor/heic2any.min'
     ], factory);
   } else if (typeof exports === 'object') {
     // Node/CommonJS:
@@ -31,7 +32,8 @@
       require('./jquery.fileupload-image'),
       require('./jquery.fileupload-audio'),
       require('./jquery.fileupload-video'),
-      require('./jquery.fileupload-validate')
+      require('./jquery.fileupload-validate'),
+      require('./vendor/heic2any.min')
     );
   } else {
     // Browser globals:
@@ -100,6 +102,7 @@
         var blobx = data.files[0];
         var fileReader = new FileReader();
         fileReader.onloadend = function (e) {
+          /* eslint-disable-next-line no-undef */
           var arr = new Uint8Array(e.target.result).subarray(0, 4);
           var header = '';
           var type = '';
@@ -130,14 +133,65 @@
               break;
           }
 
+          /* eslint-disable jsdoc/require-jsdoc */
+          function addContinues() {
+            if (e.isDefaultPrevented()) {
+              return false;
+            }
+
+            data.context = that
+              ._renderUpload(data.files)
+              .data('data', data)
+              .addClass('processing');
+            options.filesContainer[options.prependFiles ? 'prepend' : 'append'](
+              data.context
+            );
+            that._forceReflow(data.context);
+            that._transition(data.context);
+            data
+              .process(function () {
+                return $this.fileupload('process', data);
+              })
+              .always(function () {
+                data.context
+                  .each(function (index) {
+                    $(this)
+                      .find('.size')
+                      .text(that._formatFileSize(data.files[index].size));
+                  })
+                  .removeClass('processing');
+                that._renderPreviews(data);
+              })
+              .done(function () {
+                data.context.find('.edit,.start').prop('disabled', false);
+                if (
+                  that._trigger('added', e, data) !== false &&
+                  (options.autoUpload || data.autoUpload) &&
+                  data.autoUpload !== false
+                ) {
+                  data.submit();
+                }
+              })
+              .fail(function () {
+                if (data.files.error) {
+                  data.context.each(function (index) {
+                    var error = data.files[index].error;
+                    if (error) {
+                      $(this).find('.error').text(error);
+                    }
+                  });
+                }
+              });
+          }
+
           if (type !== 'unknown') {
             if (type === 'image/heic' || type === 'image/heif') {
               var originalName = data.files[0].name;
-
+              /* eslint-disable-next-line no-undef */
               heic2any({
                 blob: data.files[0],
                 toType: 'image/jpeg',
-                quality: 0.5, // cuts the quality and size by half
+                quality: 0.5 // cuts the quality and size by half
               }).then(function (conversionResultBlob) {
                 // conversionResult is a BLOB
                 // of the JPEG formatted image
@@ -148,7 +202,7 @@
                     .replace('.heic', '.jpg')
                     .replace('.heif', '.jpg'),
                   {
-                    type: conversionResultBlob.type,
+                    type: conversionResultBlob.type
                   }
                 );
                 // console.log('Converted to jpeg:', data.files[0]);
@@ -163,63 +217,13 @@
             ) {
               addContinues(data);
             } else {
-              console.log('Aborted');
+              // console.log('Aborted');
               data.abort();
             }
           }
         };
 
         fileReader.readAsArrayBuffer(blobx);
-
-        function addContinues() {
-          if (e.isDefaultPrevented()) {
-            return false;
-          }
-
-          data.context = that
-            ._renderUpload(data.files)
-            .data('data', data)
-            .addClass('processing');
-          options.filesContainer[options.prependFiles ? 'prepend' : 'append'](
-            data.context
-          );
-          that._forceReflow(data.context);
-          that._transition(data.context);
-          data
-            .process(function () {
-              return $this.fileupload('process', data);
-            })
-            .always(function () {
-              data.context
-                .each(function (index) {
-                  $(this)
-                    .find('.size')
-                    .text(that._formatFileSize(data.files[index].size));
-                })
-                .removeClass('processing');
-              that._renderPreviews(data);
-            })
-            .done(function () {
-              data.context.find('.edit,.start').prop('disabled', false);
-              if (
-                that._trigger('added', e, data) !== false &&
-                (options.autoUpload || data.autoUpload) &&
-                data.autoUpload !== false
-              ) {
-                data.submit();
-              }
-            })
-            .fail(function () {
-              if (data.files.error) {
-                data.context.each(function (index) {
-                  var error = data.files[index].error;
-                  if (error) {
-                    $(this).find('.error').text(error);
-                  }
-                });
-              }
-            });
-        }
       },
       // Callback for the start of each file upload request:
       send: function (e, data) {
