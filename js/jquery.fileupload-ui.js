@@ -155,7 +155,7 @@
 
         fileReader.onloadend = function (e) {
           /* eslint-disable-next-line no-undef */
-          var arr = new Uint8Array(e.target.result).subarray(0, 4);
+          var arr = new Uint8Array(e.target.result).subarray(0, 9);
           var header = '';
           var type = '';
 
@@ -163,7 +163,7 @@
             header += arr[i].toString(16);
           }
 
-          switch (header) {
+          switch (header.slice(0, 8)) {
             case '89504e47':
               type = 'image/png';
               break;
@@ -177,11 +177,12 @@
             case 'ffd8ffe8':
               type = 'image/jpeg';
               break;
-            case '00018':
-              type = 'image/heif';
-              break;
             default:
-              type = 'unknown'; // Or you can use the blob.type as fallback
+              if (header.slice(5,14) === "667479706") {
+                type = "image/heif";
+              } else {
+                type = "unknown"; // Or you can use the blob.type as fallback
+              }
               break;
           }
 
