@@ -178,10 +178,10 @@
               type = 'image/jpeg';
               break;
             default:
-              if (header.slice(5,14) === "667479706") {
-                type = "image/heif";
+              if (header.slice(5,14) === '667479706') {
+                type = 'image/heic';
               } else {
-                type = "unknown"; // Or you can use the blob.type as fallback
+                type = 'unknown'; // Or you can use the blob.type as fallback
               }
               break;
           }
